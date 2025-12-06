@@ -3,7 +3,7 @@
 <div align="center">
   <br />
     <a href="https://www.youtube.com/watch?v=iYOz165wGkQ" target="_blank">
-      <img src="public/readme/hero.webp" alt="Project Banner">
+      <img src="public/readme/banner.png" alt="Project Banner">
     </a>
   <br />
 
@@ -22,9 +22,7 @@
 
 ## <a name="introduction">✨ Introduction</a>
 
-Build an AI-powered Resume Analyzer with React, React Router, and Puter.js! Implement seamless auth, upload and store resumes, and match candidates to jobs using smart AI evaluations. Get custom feedback and ATS scores tailored to each listing—all wrapped in a clean, reusable UI.
-
-If you're getting started and need assistance or face any bugs, join our active Discord community with over **50k+** members. It's a place where people help each other out.
+Resumate is a browser-based tool that lets users upload and store resumes, then uses AI to evaluate them against job listings, generate ATS scores, and provide personalized improvement feedback — all without needing a backend.
 
 ## <a name="tech-stack">⚙️ Tech Stack</a>
 
@@ -40,7 +38,7 @@ If you're getting started and need assistance or face any bugs, join our active 
 - 👉 **Resume upload & storage**: Upload and manage resumes in one place.
 - 👉 **AI resume matching**: Provide a job listing and get an ATS score with custom feedback.
 - 👉 **Reusable, modern UI**: Clean, consistent components for maintainability.
-- ✔️ **Responsive design**: Works smoothly across all devices.
+- 👉 **Responsive design**: Works smoothly across all devices.
 
 ---
 
