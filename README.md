@@ -29,29 +29,18 @@ If you're getting started and need assistance or face any bugs, join our active 
 ## <a name="tech-stack">⚙️ Tech Stack</a>
 
 - **Frontend:** ⚛️ React, React Router v7, Tailwind CSS, TypeScript
-- **Cloud Runtime / Serverless Backend:** 🗄 ☁️ Puter.com (Internet OS + serverless storage/auth/database)
-- **AI & Automation::** 🤖 Puter.js AI APIs (GPT, Claude, OCR, DALL·E) for resume parsing, analysis, and feedback
+- **Serverless Backend:** ☁️ Puter.com (Internet OS + serverless storage/auth/database)
+- **AI & Automation::** 🤖 Puter.js AI APIs (GPT, Gemini, Claude) for analysis, and feedback
 - **State Management::** 🔁 Zustand 
 - **Deployment:** 🌐 Puter Cloud Environment
 
 ## <a name="features">🔋 Features</a>
 
-👉 **Easy & convenient auth**: Handle authentication entirely in the browser using Puter.js—no backend or setup required.
-
-👉 **Resume upload & storage**: Let users upload and store all their resumes in one place, safely and reliably.
-
-👉 **AI resume matching**: Provide a job listing and get an ATS score with custom feedback tailored to each resume.
-
-👉 **Reusable, modern UI**: Built with clean, consistent components for a great-looking and maintainable interface.
-
-👉 **Code Reusability**: Leverage reusable components and a modular codebase for efficient development.
-
-👉 **Cross-Device Compatibility**: Fully responsive design that works seamlessly across all devices.
-
-👉 **Modern UI/UX**: Clean, responsive design built with Tailwind CSS and shadcn/ui for a sleek user experience.
-
-And many more, including code architecture and reusability.
-
+- 👉 **Easy & Convenient Auth**: Secure login handled entirely via Puter.js, no backend needed.
+- 👉 **Resume upload & storage**: Upload and manage resumes in one place.
+- 👉 **AI resume matching**: Provide a job listing and get an ATS score with custom feedback.
+- 👉 **Reusable, modern UI**: Clean, consistent components for maintainability.
+- ✔️ **Responsive design**: Works smoothly across all devices.
 
 ---
 
