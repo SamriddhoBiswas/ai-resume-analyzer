@@ -19,21 +19,21 @@ const Upload = () => {
     }
 
     const handleAnalyze = async ({ companyName, jobTitle, jobDescription, file }: { companyName: string, jobTitle: string, jobDescription: string, file: File  }) => {
-        setIsProcessing(true);
+    setIsProcessing(true);
 
         try {
             setStatusText('Uploading the file...');
             const uploadedFile = await fs.upload([file]);
             if(!uploadedFile) return setStatusText('Error: Failed to upload file');
-
+    
             setStatusText('Converting to image...');
             const imageFile = await convertPdfToImage(file);
             if(!imageFile.file) return setStatusText('Error: Failed to convert PDF to image');
-
+    
             setStatusText('Uploading the image...');
             const uploadedImage = await fs.upload([imageFile.file]);
             if(!uploadedImage) return setStatusText('Error: Failed to upload image');
-
+    
             setStatusText('Preparing data...');
             const uuid = generateUUID();
             const data = {
@@ -42,62 +42,94 @@ const Upload = () => {
                 imagePath: uploadedImage.path,
                 companyName, jobTitle, jobDescription,
                 feedback: '',
-            }
+            };
             await kv.set(`resume:${uuid}`, JSON.stringify(data));
-
-            setStatusText('Analyzing...');
-
-            const feedback = await ai.feedback(
-                uploadedFile.path,
-                prepareInstructions({ jobTitle, jobDescription })
-            )
+    
+            setStatusText('Running OCR on resume image...');
+            let resumeText = '';
+            try {
+                // Prefer passing the File to ai.img2txt
+                resumeText = (await ai.img2txt(imageFile.file)) || '';
+                console.log('OCR text length:', resumeText.length);
+            } catch (err) {
+                console.warn('OCR failed (file). Trying uploaded image path fallback:', err);
+                try {
+                    // fallback: ask the SDK to OCR by uploaded path (may or may not be supported)
+                    resumeText = (await ai.img2txt(uploadedImage.path as unknown as File)) || '';
+                    console.log('OCR (path) text length:', resumeText.length);
+                } catch (err2) {
+                    console.warn('OCR via path also failed:', err2);
+                }
+            }
+    
+            setStatusText('Analyzing resume with AI (text + image)...');
+    
+            // Build the instruction payload (include OCR text if available)
+            const instruction = prepareInstructions({ jobTitle, jobDescription });
+            const messageText = resumeText
+                ? `${instruction}\n\nResumeText:\n${resumeText}`
+                : instruction;
+    
+            // Build chat payload with both the image file (uploaded path) and the text
+            const chatPayload = [
+                {
+                    role: 'user',
+                    content: [
+                        // Attach image file so model can use visual layout if needed
+                        { type: 'file', puter_path: uploadedImage.path },
+                        // Include the textual instruction + OCR text
+                        { type: 'text', text: messageText },
+                    ],
+                },
+            ];
+    
+            // Use ai.chat (multimodal) so we can pass both file + text
+            const feedback = await ai.chat(chatPayload);
             if (!feedback) return setStatusText('Error: Failed to analyze resume');
-
-            // Extract the text content from the AI response
+    
+            // Extract response text safely
             let feedbackText = '';
             if (typeof feedback.message.content === 'string') {
                 feedbackText = feedback.message.content;
-            } else if (Array.isArray(feedback.message.content) && feedback.message.content[0]) {
-                feedbackText = feedback.message.content[0].text || '';
+            } else if (Array.isArray(feedback.message.content) && feedback.message.content.length) {
+                // Try to find a text item in returned content
+                const item = feedback.message.content.find((c: any) => c && (c.text || typeof c === 'string'));
+                feedbackText = item?.text ?? (typeof item === 'string' ? item : feedback.message.content[0].text ?? '');
+            } else {
+                console.error('Unexpected AI response content:', feedback.message.content);
+                return setStatusText('Error: Unexpected AI response format');
             }
-
-            if (!feedbackText) {
-                console.error('No feedback text received:', feedback);
-                return setStatusText('Error: Empty feedback from AI');
+    
+            // Strip common code fences or markdown wrappers
+            let cleaned = feedbackText.trim();
+            if (cleaned.startsWith('```json')) {
+                cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+            } else if (cleaned.startsWith('```')) {
+                cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
             }
-
-            // Clean up the JSON string (remove markdown code blocks if present)
-            let cleanedText = feedbackText.trim();
-            if (cleanedText.startsWith('```json')) {
-                cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
-            } else if (cleanedText.startsWith('```')) {
-                cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
-            }
-
-            // Parse the JSON feedback
-            let parsedFeedback;
+    
+            // Parse JSON
+            let parsed;
             try {
-                parsedFeedback = JSON.parse(cleanedText);
-            } catch (parseError) {
-                console.error('Failed to parse feedback JSON:', cleanedText, parseError);
-                return setStatusText('Error: Invalid feedback format from AI');
+                parsed = JSON.parse(cleaned);
+            } catch (parseErr) {
+                console.error('Failed to parse AI JSON response:', cleaned, parseErr);
+                return setStatusText('Error: Invalid JSON returned by AI');
             }
-
-            // Validate that we have scores
-            if (!parsedFeedback.overallScore || parsedFeedback.overallScore === 0) {
-                console.warn('AI returned scores of 0. Raw feedback:', parsedFeedback);
-            }
-
-            data.feedback = parsedFeedback;
+    
+            // Save and navigate
+            data.feedback = parsed;
             await kv.set(`resume:${uuid}`, JSON.stringify(data));
             setStatusText('Analysis complete, redirecting...');
-            console.log('Saved data:', data);
+            console.log('Saved analysis:', data);
             navigate(`/resume/${uuid}`);
-        } catch (error) {
-            console.error('Error during analysis:', error);
-            setStatusText(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } catch (err: any) {
+            console.error('Error during analysis:', err);
+            setStatusText(`Error: ${err?.message ?? 'Unknown error'}`);
+        } finally {
+            setIsProcessing(false);
         }
-    }
+    };
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
