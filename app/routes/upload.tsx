@@ -71,16 +71,14 @@ const Upload = () => {
                 : instruction;
     
             // Build chat payload with both the image file (uploaded path) and the text
-            const chatPayload = [
-                {
-                    role: 'user',
-                    content: [
-                        // Attach image file so model can use visual layout if needed
-                        { type: 'file', puter_path: uploadedImage.path },
-                        // Include the textual instruction + OCR text
-                        { type: 'text', text: messageText },
-                    ],
-                },
+            const chatPayload: ChatMessage[] = [
+              {
+                role: "user",
+                content: [
+                  { type: "file", puter_path: uploadedImage.path },
+                  { type: "text", text: messageText }
+                ]
+              }
             ];
     
             // Use ai.chat (multimodal) so we can pass both file + text
