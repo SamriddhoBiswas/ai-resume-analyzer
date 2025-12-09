@@ -19,21 +19,21 @@ const Upload = () => {
     }
 
     const handleAnalyze = async ({ companyName, jobTitle, jobDescription, file }: { companyName: string, jobTitle: string, jobDescription: string, file: File  }) => {
-    setIsProcessing(true);
+        setIsProcessing(true);
 
         try {
             setStatusText('Uploading the file...');
             const uploadedFile = await fs.upload([file]);
             if(!uploadedFile) return setStatusText('Error: Failed to upload file');
-    
+
             setStatusText('Converting to image...');
             const imageFile = await convertPdfToImage(file);
             if(!imageFile.file) return setStatusText('Error: Failed to convert PDF to image');
-    
+
             setStatusText('Uploading the image...');
             const uploadedImage = await fs.upload([imageFile.file]);
             if(!uploadedImage) return setStatusText('Error: Failed to upload image');
-    
+
             setStatusText('Preparing data...');
             const uuid = generateUUID();
             const data = {
@@ -44,7 +44,7 @@ const Upload = () => {
                 feedback: '',
             };
             await kv.set(`resume:${uuid}`, JSON.stringify(data));
-    
+
             setStatusText('Running OCR on resume image...');
             let resumeText = '';
             try {
@@ -61,16 +61,17 @@ const Upload = () => {
                     console.warn('OCR via path also failed:', err2);
                 }
             }
-    
+
             setStatusText('Analyzing resume with AI (text + image)...');
-    
+
             // Build the instruction payload (include OCR text if available)
             const instruction = prepareInstructions({ jobTitle, jobDescription });
             const messageText = resumeText
                 ? `${instruction}\n\nResumeText:\n${resumeText}`
                 : instruction;
-    
+
             // Build chat payload with both the image file (uploaded path) and the text
+            // build chat payload with explicit ChatMessage[] typing
             const chatPayload: ChatMessage[] = [
               {
                 role: "user",
@@ -80,11 +81,11 @@ const Upload = () => {
                 ]
               }
             ];
-    
+
             // Use ai.chat (multimodal) so we can pass both file + text
             const feedback = await ai.chat(chatPayload);
             if (!feedback) return setStatusText('Error: Failed to analyze resume');
-    
+
             // Extract response text safely
             let feedbackText = '';
             if (typeof feedback.message.content === 'string') {
@@ -92,12 +93,12 @@ const Upload = () => {
             } else if (Array.isArray(feedback.message.content) && feedback.message.content.length) {
                 // Try to find a text item in returned content
                 const item = feedback.message.content.find((c: any) => c && (c.text || typeof c === 'string'));
-                feedbackText = item?.text ?? (typeof item === 'string' ? item : feedback.message.content[0].text ?? '');
+                feedbackText = item?.text ?? (typeof item === 'string' ? item : feedback.message.content[0].text ?? '' );
             } else {
                 console.error('Unexpected AI response content:', feedback.message.content);
                 return setStatusText('Error: Unexpected AI response format');
             }
-    
+
             // Strip common code fences or markdown wrappers
             let cleaned = feedbackText.trim();
             if (cleaned.startsWith('```json')) {
@@ -105,7 +106,7 @@ const Upload = () => {
             } else if (cleaned.startsWith('```')) {
                 cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
             }
-    
+
             // Parse JSON
             let parsed;
             try {
@@ -114,7 +115,7 @@ const Upload = () => {
                 console.error('Failed to parse AI JSON response:', cleaned, parseErr);
                 return setStatusText('Error: Invalid JSON returned by AI');
             }
-    
+
             // Save and navigate
             data.feedback = parsed;
             await kv.set(`resume:${uuid}`, JSON.stringify(data));
@@ -127,7 +128,7 @@ const Upload = () => {
         } finally {
             setIsProcessing(false);
         }
-    };
+    }
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
