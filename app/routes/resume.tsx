@@ -6,7 +6,7 @@ import ATS from "~/components/ATS";
 import Details from "~/components/Details";
 
 export const meta = () => ([
-    { title: 'Resumate | Review ' },
+    { title: 'Resumind | Review ' },
     { name: 'description', content: 'Detailed overview of your resume' },
 ])
 
@@ -20,9 +20,13 @@ const Resume = () => {
 
     useEffect(() => {
         if(!isLoading && !auth.isAuthenticated) navigate(`/auth?next=/resume/${id}`);
-    }, [isLoading])
+    }, [isLoading, id, auth.isAuthenticated, navigate])
 
     useEffect(() => {
+        if (!id) {
+            navigate('/'); // Redirect to home if no ID
+            return;
+        }
         const loadResume = async () => {
             const resume = await kv.get(`resume:${id}`);
 
@@ -47,7 +51,7 @@ const Resume = () => {
         }
 
         loadResume();
-    }, [id]);
+    }, [id, kv]) // ✅ Added 'kv' dependency
 
     return (
         <main className="!pt-0">
