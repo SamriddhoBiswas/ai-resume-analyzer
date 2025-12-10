@@ -2,9 +2,7 @@
 
 <div align="center">
   <br />
-    <a href="https://www.youtube.com/watch?v=iYOz165wGkQ" target="_blank">
       <img src="public/readme/banner.png" alt="Project Banner">
-    </a>
   <br />
 
   <div>
