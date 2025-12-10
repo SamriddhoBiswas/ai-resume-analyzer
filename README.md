@@ -94,7 +94,7 @@ npm install
 npm run dev
 ```
 <img src="public/readme/image.png" alt="Project Banner">
-
+<img src="public/readme/ats.png" alt="Project Banner">
 
 Open [http://localhost:5173](http://localhost:5173) in your browser to view the project.
 ---
