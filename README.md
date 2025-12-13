@@ -108,4 +108,11 @@ Contributions are welcome! Fork this repo and submit a pull request.
 
 ---
 
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+
 <h3 align="center">2025 ©️ Samriddho Biswas</h3>
